@@ -1,0 +1,188 @@
+class BaseDeConocimiento:
+    # Almacena los hechos y las reglas del sistema.
+
+    def __init__(self):
+        self.hechos = {}
+        self.reglas = []
+
+    def agregar_hecho(self, nombre, valor):
+        self.hechos[nombre] = valor
+
+    def agregar_regla(self, condiciones, conclusion):
+        self.reglas.append((condiciones, conclusion))
+
+
+class SistemaExperto:
+    # Realiza inferencias usando lógica proposicional.
+
+    def __init__(self, base):
+        self.base = base
+
+    def evaluar_condiciones(self, condiciones):
+        """
+        Evalúa una lista de condiciones.
+
+        Cada condición tiene la forma:
+        ("Y", [...])
+        ("O", [...])
+        ("NO", "hecho")
+        """
+
+        operador = condiciones[0]
+
+        if operador == "Y":
+            return all(self.obtener_valor(cond) for cond in condiciones[1])
+
+        elif operador == "O":
+            return any(self.obtener_valor(cond) for cond in condiciones[1])
+
+        elif operador == "NO":
+            return not self.obtener_valor(condiciones[1])
+
+        return False
+
+    def obtener_valor(self, elemento):
+        # Si es otra condición, la evalúa recursivamente.
+        if isinstance(elemento, tuple):
+            return self.evaluar_condiciones(elemento)
+
+        # Si es un hecho, obtiene su valor.
+        return self.base.hechos.get(elemento, 0) == 1
+
+    def inferir(self):
+        """
+        Aplica las reglas hasta que no se puedan generar
+        nuevos hechos.
+        """
+
+        razonamiento = []
+
+        cambio = True
+
+        while cambio:
+            cambio = False
+
+            for condiciones, conclusion in self.base.reglas:
+
+                if self.evaluar_condiciones(condiciones):
+
+                    if self.base.hechos.get(conclusion, 0) == 0:
+                        self.base.hechos[conclusion] = 1
+                        cambio = True
+
+                        razonamiento.append(
+                            f"Se deduce '{conclusion}' porque se cumple la regla {condiciones}"
+                        )
+
+        return razonamiento
+
+
+def probar_paciente(nombre, sintomas):
+    print("--------------------------------------------")
+    print(nombre)
+
+    base = BaseDeConocimiento()
+
+    # Agrega los síntomas del paciente.
+    for hecho, valor in sintomas.items():
+        base.agregar_hecho(hecho, valor)
+
+    # Reglas de la base de conocimiento.
+
+    # Si tiene fiebre alta y tos -> infección respiratoria.
+    base.agregar_regla(
+        ("Y", ["fiebre_alta", "tos"]),
+        "infeccion_respiratoria"
+    )
+
+    # Si tiene infección respiratoria y dificultad para respirar -> neumonía.
+    base.agregar_regla(
+        ("Y", ["infeccion_respiratoria", "dificultad_respirar"]),
+        "neumonia"
+    )
+
+    # Si tiene estornudos y congestión nasal -> resfriado común.
+    base.agregar_regla(
+        ("Y", ["estornudos", "congestion_nasal"]),
+        "resfriado"
+    )
+
+    # Si tiene fiebre alta o dolor muscular -> infección viral.
+    base.agregar_regla(
+        ("O", ["fiebre_alta", "dolor_muscular"]),
+        "infeccion_viral"
+    )
+
+    # Si tiene infección viral y no presenta tos -> gripe leve.
+    base.agregar_regla(
+        ("Y", ["infeccion_viral", ("NO", "tos")]),
+        "gripe_leve"
+    )
+
+    sistema = SistemaExperto(base)
+
+    razonamiento = sistema.inferir()
+
+    print("\nHechos iniciales")
+
+    for hecho, valor in sintomas.items():
+        print(f"{hecho}: {valor}")
+
+    print("\nRazonamiento")
+
+    if razonamiento:
+        for paso in razonamiento:
+            print("-", paso)
+    else:
+        print("No se pudo deducir ninguna enfermedad.")
+
+    print("\nDiagnósticos")
+
+    diagnosticos = []
+
+    for hecho, valor in base.hechos.items():
+
+        if valor == 1 and hecho not in sintomas:
+            diagnosticos.append(hecho)
+
+    if diagnosticos:
+        for d in diagnosticos:
+            print("-", d)
+    else:
+        print("Sin diagnóstico.")
+
+
+# Paciente 1
+paciente1 = {
+    "fiebre_alta": 1,
+    "tos": 1,
+    "dificultad_respirar": 1,
+    "estornudos": 0,
+    "congestion_nasal": 0,
+    "dolor_muscular": 0
+}
+
+# Paciente 2
+paciente2 = {
+    "fiebre_alta": 0,
+    "tos": 0,
+    "dificultad_respirar": 0,
+    "estornudos": 1,
+    "congestion_nasal": 1,
+    "dolor_muscular": 0
+}
+
+# Paciente 3
+paciente3 = {
+    "fiebre_alta": 0,
+    "tos": 0,
+    "dificultad_respirar": 0,
+    "estornudos": 0,
+    "congestion_nasal": 0,
+    "dolor_muscular": 1
+}
+
+
+probar_paciente("Paciente 1", paciente1)
+probar_paciente("Paciente 2", paciente2)
+probar_paciente("Paciente 3", paciente3)
