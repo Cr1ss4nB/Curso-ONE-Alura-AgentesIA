@@ -1,0 +1,1 @@
+Los códigos utilizados fueron hechos en Google Colab: [fundamentos IA.ipynb](https://colab.research.google.com/drive/1zc09mDlB3zUIKMnA8VjxPTrOe5yMoesf?usp=sharing)
