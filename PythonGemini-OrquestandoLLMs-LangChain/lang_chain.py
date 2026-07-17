@@ -78,6 +78,4 @@ cadena_compuesta = (cadena_analisis | cadena_resumen)
 
 respuesta = cadena_compuesta.invoke({"imagen_informada": imagen})
 
-
-
-# Clase 3: Estructurando salidas: Diferentes formatos de salida
+# Clase 4: Agentes Orquestadores
