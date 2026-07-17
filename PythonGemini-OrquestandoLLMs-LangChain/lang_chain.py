@@ -78,4 +78,4 @@ cadena_compuesta = (cadena_analisis | cadena_resumen)
 
 respuesta = cadena_compuesta.invoke({"imagen_informada": imagen})
 
-# Clase 4: Agentes Orquestadores
+# Clase 5: Creando Herramientas con Diferentes LLMs
