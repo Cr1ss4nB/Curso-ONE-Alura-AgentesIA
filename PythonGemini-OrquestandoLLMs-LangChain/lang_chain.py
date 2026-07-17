@@ -5,8 +5,9 @@ from my_models import GEMINI_FLASH
 from my_keys import GEMINI_API_KEY, COHERE_API_KEY
 from my_helper import encode_image
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.globals import set_debug
+from detalles_imagen import DetallesImagen
 
 set_debug(True)
 
@@ -49,9 +50,9 @@ template_analisis = ChatPromptTemplate.from_messages(
 
 cadena_analisis = template_analisis | llm | StrOutputParser()
 
-respuesta_analisis = cadena_analisis.invoke({"imagen_informada": imagen})
-
-print(respuesta_analisis)
+parser_json = JsonOutputParser(
+    pydantic_object=DetallesImagen
+)
 
 template_respuesta = PromptTemplate(
     template = """
@@ -61,16 +62,22 @@ template_respuesta = PromptTemplate(
         
         #RESULTADO DE LA IMAGEN
         {respuesta_analisis_imagen}
+        
+        ## FORMATO DE SALIDA
+        {formato_salida}
         """,
-        input_variables = ["respuesta_analisis_imagen"]
+        input_variables = ["respuesta_analisis_imagen"],
+        partial_variables = {
+            "formato_salida": parser_json.get_format_instructions()
+        }
 )
 
-llm_cohere = ChatCohere(cohere_api_key=COHERE_API_KEY)
+cadena_resumen = template_respuesta | llm | parser_json
 
-cadena_resumen = template_respuesta | llm_cohere | StrOutputParser()
-
-cadena_compuesta = (cadena_analisis | cadena_resumen) | StrOutputParser()
+cadena_compuesta = (cadena_analisis | cadena_resumen)
 
 respuesta = cadena_compuesta.invoke({"imagen_informada": imagen})
 
-# Clase 2: Prompt templates y Output Parsing
+
+
+# Clase 3: Estructurando salidas: Diferentes formatos de salida
